@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-vtx+wxv)u89j(4xu0*$a#hy2)o0j2aw958t)jbuvldr=44f-9=
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['8000-anthonydevarti-sldb-3ggumv8nhz0.ws-us106.gitpod.io']
+ALLOWED_HOSTS = ['8000-anthonydevarti-sldb-ma1jvon6ii0.ws-us106.gitpod.io']
 
 
 # Application definition
@@ -50,7 +50,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-CSRF_TRUSTED_ORIGINS = [ 'https://8000-anthonydevarti-sldb-3ggumv8nhz0.ws-us106.gitpod.io' ] #This is bad.
+CSRF_TRUSTED_ORIGINS = [ 'https://8000-anthonydevarti-sldb-ma1jvon6ii0.ws-us106.gitpod.io' ] #This is bad.
 
 ROOT_URLCONF = 'sylvan.urls'
 

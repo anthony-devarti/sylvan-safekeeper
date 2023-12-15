@@ -9,6 +9,6 @@ this is the backend for the project found here: https://github.com/anthony-devar
 
 
 ## Notes on backend:
-*We want cards to be reserved immediately when a user adds them to their basket
-  #Make sure if this happens, a card cannot be reserved forever
-  #This means that LineItem is updated immediately onClick of Reserve button
+<ul>We want cards to be reserved immediately when a user adds them to their basket
+  <li>Make sure if this happens, a card cannot be reserved forever</li>
+  <li>This means that LineItem is updated immediately onClick of Reserve button </li></ul>

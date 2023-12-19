@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-vtx+wxv)u89j(4xu0*$a#hy2)o0j2aw958t)jbuvldr=44f-9=
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['8000-anthonydevarti-sldb-ma1jvon6ii0.ws-us106.gitpod.io']
+ALLOWED_HOSTS = ['8000-anthonydevarti-sldb-ftc87fv2w0x.ws-us107.gitpod.io']
 
 
 # Application definition
@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
@@ -50,7 +51,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-CSRF_TRUSTED_ORIGINS = [ 'https://8000-anthonydevarti-sldb-ma1jvon6ii0.ws-us106.gitpod.io' ] #This is bad.
+CSRF_TRUSTED_ORIGINS = [ 'https://8000-anthonydevarti-sldb-ftc87fv2w0x.ws-us107.gitpod.io' ] #This is bad.
 
 ROOT_URLCONF = 'sylvan.urls'
 
@@ -124,3 +125,11 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+REST_FRAMEWORK = {
+    # Use Django's standard `django.contrib.auth` permissions,
+    # or allow read-only access for unauthenticated users.
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
+    ]
+}

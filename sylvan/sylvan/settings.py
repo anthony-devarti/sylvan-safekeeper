@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-vtx+wxv)u89j(4xu0*$a#hy2)o0j2aw958t)jbuvldr=44f-9=
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['8000-anthonydevarti-sldb-ftc87fv2w0x.ws-us107.gitpod.io']
+ALLOWED_HOSTS = ['8000-anthonydevarti-sldb-355zm2gwjh4.ws-us107.gitpod.io']
 
 
 # Application definition
@@ -51,7 +51,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-CSRF_TRUSTED_ORIGINS = [ 'https://8000-anthonydevarti-sldb-ftc87fv2w0x.ws-us107.gitpod.io' ] #This is bad.
+CSRF_TRUSTED_ORIGINS = [ 'https://8000-anthonydevarti-sldb-355zm2gwjh4.ws-us107.gitpod.io' ] #This is bad.
 
 ROOT_URLCONF = 'sylvan.urls'
 
@@ -131,5 +131,7 @@ REST_FRAMEWORK = {
     # or allow read-only access for unauthenticated users.
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
-    ]
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 10
 }

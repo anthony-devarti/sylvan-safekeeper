@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from library.models import ReservationStatus
+from library.models import ReservationStatus, LineItem, Reservation, Delinquency
+from django.contrib.auth.models import Group, User
 
 
 class ReservationStatusSerializer(serializers.Serializer):
@@ -24,3 +25,23 @@ class ReservationStatusSerializer(serializers.Serializer):
         instance.style = validated_data.get('style', instance.style)
         instance.save()
         return instance
+
+class UserSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = User
+        fields = ['url', 'username', 'email', 'groups']
+
+class LineItemSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = LineItem
+        fields =  '__all__' 
+
+class ReservationSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = Reservation
+        fields = '__all__'
+
+class DelinquencySerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = Delinquency
+        fields = '__all__'

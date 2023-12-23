@@ -25,12 +25,14 @@ SECRET_KEY = 'django-insecure-vtx+wxv)u89j(4xu0*$a#hy2)o0j2aw958t)jbuvldr=44f-9=
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['8000-anthonydevarti-sldb-355zm2gwjh4.ws-us107.gitpod.io']
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
 
 INSTALLED_APPS = [
+    'corsheaders',
+    # 'django_filters',
     'library.apps.LibraryConfig',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -42,16 +44,23 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
+    "django.middleware.common.CommonMiddleware",
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-CSRF_TRUSTED_ORIGINS = [ 'https://8000-anthonydevarti-sldb-355zm2gwjh4.ws-us107.gitpod.io' ] #This is bad.
+# CORS_ALLOWED_ORIGINS = {
+#     'https://3000-anthonydeva-sylvanlibra-37g1pm5kjx9.ws-us107.gitpod.io',
+# }
+
+CORS_ALLOW_ALL_ORIGINS: True #This is very very bad.
+
+CSRF_TRUSTED_ORIGINS = [ 'https://***.gitpod.io' ] #This is bad.
 
 ROOT_URLCONF = 'sylvan.urls'
 
@@ -129,9 +138,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 REST_FRAMEWORK = {
     # Use Django's standard `django.contrib.auth` permissions,
     # or allow read-only access for unauthenticated users.
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
-    ],
+    'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.AllowAny'],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10
 }

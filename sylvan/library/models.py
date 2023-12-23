@@ -8,6 +8,10 @@ class LineItem(models.Model):
     last_updated = models.DateTimeField('auto_now')
     date_created = models.DateTimeField('auto_now_add')
 
+    def __str__(self):
+        id = str(self.id_inventory)
+        return id
+
 class Reservation(models.Model):
     id_user = models.IntegerField(default=0)
 

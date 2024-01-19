@@ -25,14 +25,12 @@ SECRET_KEY = 'django-insecure-vtx+wxv)u89j(4xu0*$a#hy2)o0j2aw958t)jbuvldr=44f-9=
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
-
 
 # Application definition
 
 INSTALLED_APPS = [
     'corsheaders',
-    # 'django_filters',
+    'django_filters',
     'library.apps.LibraryConfig',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -54,13 +52,20 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-# CORS_ALLOWED_ORIGINS = {
-#     'https://3000-anthonydeva-sylvanlibra-37g1pm5kjx9.ws-us107.gitpod.io',
-# }
+CORS_ALLOW_ALL_ORIGINS: False
 
-CORS_ALLOW_ALL_ORIGINS: True #This is very very bad.
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:3000',
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+]
 
-CSRF_TRUSTED_ORIGINS = [ 'https://***.gitpod.io' ] #This is bad.
+CORS_ORIGIN_WHITELIST = (
+    'http://localhost:3000'
+)
+
+# CSRF_TRUSTED_ORIGINS = [ 'https://***.gitpod.io', 'localhost:3000' ] #This is bad.
+
 
 ROOT_URLCONF = 'sylvan.urls'
 
@@ -140,5 +145,6 @@ REST_FRAMEWORK = {
     # or allow read-only access for unauthenticated users.
     'DEFAULT_PERMISSION_CLASSES': ['rest_framework.permissions.AllowAny'],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10
+    'PAGE_SIZE': 10,
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend']
 }

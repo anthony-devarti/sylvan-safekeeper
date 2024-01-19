@@ -4,6 +4,8 @@ from library.models import ReservationStatus, LineItem, Reservation, Delinquency
 from django.contrib.auth.models import Group, User
 from rest_framework import permissions, viewsets
 from library.serializers import UserSerializer, ReservationStatusSerializer, LineItemSerializer, ReservationSerializer, DelinquencySerializer
+from rest_framework import generics, filters
+from django_filters.rest_framework import DjangoFilterBackend
 
 # Create your views here.
 def index(request):
@@ -41,6 +43,8 @@ class LineItemViewSet(viewsets.ModelViewSet):
     """
     queryset = LineItem.objects.all()
     serializer_class = LineItemSerializer
+    # filter_backends=['DjangoFilterBackend']
+    filterset_fields = ['reserved',]
 
 class ReservationViewSet(viewsets.ModelViewSet):
     """

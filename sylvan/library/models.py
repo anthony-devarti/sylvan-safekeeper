@@ -49,3 +49,13 @@ class Delinquency(models.Model):
     
     class Meta():
         verbose_name_plural = "Delinquencies"
+
+class DecisionPoint(models.Model):
+    title = models.CharField(max_length = 200)
+    description = models.CharField(max_length = 200)
+    terminal = models.BooleanField(default = False)
+    #destination on decline
+    #destination on success
+
+    def __str__(self):
+        return self.title

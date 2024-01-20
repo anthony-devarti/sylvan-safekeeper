@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from library.models import ReservationStatus, LineItem, Reservation, Delinquency
+from library.models import ReservationStatus, LineItem, Reservation, Delinquency, DecisionPoint
 from django.contrib.auth.models import Group, User
 
 
@@ -44,4 +44,9 @@ class ReservationSerializer(serializers.HyperlinkedModelSerializer):
 class DelinquencySerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Delinquency
+        fields = '__all__'
+
+class DecisionPointSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = DecisionPoint
         fields = '__all__'

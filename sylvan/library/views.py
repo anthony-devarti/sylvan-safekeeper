@@ -1,9 +1,9 @@
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
-from library.models import ReservationStatus, LineItem, Reservation, Delinquency
+from library.models import ReservationStatus, LineItem, Reservation, Delinquency, DecisionPoint
 from django.contrib.auth.models import Group, User
 from rest_framework import permissions, viewsets
-from library.serializers import UserSerializer, ReservationStatusSerializer, LineItemSerializer, ReservationSerializer, DelinquencySerializer
+from library.serializers import UserSerializer, ReservationStatusSerializer, LineItemSerializer, ReservationSerializer, DelinquencySerializer, DecisionPointSerializer
 from rest_framework import generics, filters
 from django_filters.rest_framework import DjangoFilterBackend
 
@@ -60,3 +60,10 @@ class DelinquencyViewSet(viewsets.ModelViewSet):
     """
     queryset = Delinquency.objects.all()
     serializer_class = DelinquencySerializer
+
+class DecisionPointViewSet(viewsets.ModelViewSet):
+    """
+    API Endpoint that shows DecisionPoints Along the workflow
+    """
+    queryset = DecisionPoint.objects.all()
+    serializer_class = DecisionPointSerializer

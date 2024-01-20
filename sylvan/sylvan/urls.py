@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.contrib.auth.models import User
 from rest_framework import routers, serializers, viewsets
-from library.views import UserViewSet, ReservationStatusViewSet, LineItemViewSet, ReservationViewSet, DelinquencyViewSet
+from library.views import UserViewSet, ReservationStatusViewSet, LineItemViewSet, ReservationViewSet, DelinquencyViewSet, DecisionPointViewSet
 
 # # Serializers define the API representation.
 # class UserSerializer(serializers.HyperlinkedModelSerializer):
@@ -38,6 +38,7 @@ router.register(r'reservationstatus', ReservationStatusViewSet)
 router.register(r'lineitem', LineItemViewSet)
 router.register(r'reservation', ReservationViewSet)
 router.register(r'delinquency', DelinquencyViewSet)
+router.register(r'decisionpoint', DecisionPointViewSet)
 
 urlpatterns = [
     path("library/", include("library.urls")),

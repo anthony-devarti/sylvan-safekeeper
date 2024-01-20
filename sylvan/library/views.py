@@ -44,7 +44,7 @@ class LineItemViewSet(viewsets.ModelViewSet):
     queryset = LineItem.objects.all()
     serializer_class = LineItemSerializer
     # filter_backends=['DjangoFilterBackend']
-    filterset_fields = ['reserved',]
+    filterset_fields = ['hold', 'id_inventory']
 
 class ReservationViewSet(viewsets.ModelViewSet):
     """

@@ -24,10 +24,6 @@ class LineItem(models.Model):
         self.last_updated = timezone.now()
         return super(LineItem, self).save(*args, **kwargs)
 
-
-class Reservation(models.Model):
-    id_user = models.IntegerField(default=0)
-
 class ReservationStatus(models.Model):
     name = models.CharField(max_length=200)
     desc = models.CharField(max_length=200)
@@ -38,6 +34,16 @@ class ReservationStatus(models.Model):
     class Meta():
         verbose_name_plural = 'Reservation Statuses'
 
+class Reservation(models.Model):
+    id_user = models.IntegerField(default=0)
+    return_date = models.DateTimeField()
+    date_created = models.DateTimeField(editable = False, null=True)
+    last_updated = models.DateTimeField(editable = False, null=True)
+    stage = models.ForeignKey(ReservationStatus, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return str(self.return_date)
+        
 class Delinquency(models.Model):
     id_user = models.IntegerField(default=0)
     id_reservation = models.IntegerField(default=0)
@@ -59,3 +65,4 @@ class DecisionPoint(models.Model):
 
     def __str__(self):
         return self.title
+

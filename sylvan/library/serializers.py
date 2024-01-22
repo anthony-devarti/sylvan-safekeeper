@@ -37,6 +37,8 @@ class LineItemSerializer(serializers.HyperlinkedModelSerializer):
         fields =  '__all__' 
 
 class ReservationSerializer(serializers.HyperlinkedModelSerializer):
+    stage = serializers.StringRelatedField()
+
     class Meta:
         model = Reservation
         fields = '__all__'

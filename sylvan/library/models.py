@@ -40,6 +40,10 @@ class Reservation(models.Model):
     date_created = models.DateTimeField(editable = False, null=True)
     last_updated = models.DateTimeField(editable = False, null=True)
     stage = models.ForeignKey(ReservationStatus, on_delete=models.CASCADE)
+    complete = models.BooleanField(default=False)
+    lost = models.BooleanField(default=False)
+    default_state = models.BooleanField(default=False)
+    action_required = models.BooleanField(default=False)
 
     def __str__(self):
         return str(self.return_date)

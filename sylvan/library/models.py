@@ -27,6 +27,7 @@ class LineItem(models.Model):
 class ReservationStatus(models.Model):
     name = models.CharField(max_length=200)
     desc = models.CharField(max_length=200)
+    responsibility = models.CharField(max_length=200)
     
     def __str__(self):
         return self.name
@@ -34,16 +35,29 @@ class ReservationStatus(models.Model):
     class Meta():
         verbose_name_plural = 'Reservation Statuses'
 
+class DecisionPoint(models.Model):
+    title = models.CharField(max_length = 200)
+    description = models.CharField(max_length = 200)
+    #a terminal decision point means that the decision can end the reservation process based on the response.
+    terminal = models.BooleanField(default = False)
+    #check these, because I got them mixed up at one point.
+    destination_on_decline = models.ForeignKey(ReservationStatus, related_name='destination_on_decline', on_delete=models.CASCADE)
+    destination_on_success = models.ForeignKey(ReservationStatus, related_name='destination_on_success', on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.title
+
 class Reservation(models.Model):
     id_user = models.IntegerField(default=0)
     return_date = models.DateTimeField()
     date_created = models.DateTimeField(editable = False, null=True)
     last_updated = models.DateTimeField(editable = False, null=True)
+    date_submitted = models.DateTimeField(editable = False, null=True)
     stage = models.ForeignKey(ReservationStatus, on_delete=models.CASCADE)
     complete = models.BooleanField(default=False)
     lost = models.BooleanField(default=False)
     default_state = models.BooleanField(default=False)
-    action_required = models.BooleanField(default=False)
+    action_required = models.ForeignKey(DecisionPoint, on_delete=models.CASCADE)
 
     def __str__(self):
         return str(self.return_date)
@@ -59,14 +73,3 @@ class Delinquency(models.Model):
     
     class Meta():
         verbose_name_plural = "Delinquencies"
-
-class DecisionPoint(models.Model):
-    title = models.CharField(max_length = 200)
-    description = models.CharField(max_length = 200)
-    terminal = models.BooleanField(default = False)
-    #destination on decline
-    #destination on success
-
-    def __str__(self):
-        return self.title
-

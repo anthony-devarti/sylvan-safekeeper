@@ -27,6 +27,7 @@ class LineItem(models.Model):
 class ReservationStatus(models.Model):
     name = models.CharField(max_length=200)
     desc = models.CharField(max_length=200)
+    responsibility = models.CharField(max_length=200)
     
     def __str__(self):
         return self.name
@@ -39,6 +40,7 @@ class Reservation(models.Model):
     return_date = models.DateTimeField()
     date_created = models.DateTimeField(editable = False, null=True)
     last_updated = models.DateTimeField(editable = False, null=True)
+    date_submitted = models.DateTimeField(editable = False, null=True)
     stage = models.ForeignKey(ReservationStatus, on_delete=models.CASCADE)
     complete = models.BooleanField(default=False)
     lost = models.BooleanField(default=False)
@@ -63,9 +65,10 @@ class Delinquency(models.Model):
 class DecisionPoint(models.Model):
     title = models.CharField(max_length = 200)
     description = models.CharField(max_length = 200)
+    #a terminal decision point means that the decision can end the reservation process based on the response.
     terminal = models.BooleanField(default = False)
-    #destination on decline
-    #destination on success
+    destination_on_decline = models.ForeignKey(ReservationStatus, related_name='destination_on_success', on_delete=models.CASCADE)
+    destination_on_success = models.ForeignKey(ReservationStatus, related_name='destination_on_decline', on_delete=models.CASCADE)
 
     def __str__(self):
         return self.title

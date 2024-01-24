@@ -1,6 +1,5 @@
-# sl-db
-database for sylvan library
-
+# sylvan-safekeeper
+database for sylvan library and backend business logic
 
 this is the backend for the project found here: https://github.com/anthony-devarti/sylvan-library
 

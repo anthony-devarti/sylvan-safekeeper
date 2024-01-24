@@ -37,7 +37,9 @@ class LineItemSerializer(serializers.HyperlinkedModelSerializer):
         fields =  '__all__' 
 
 class ReservationSerializer(serializers.HyperlinkedModelSerializer):
-    stage = serializers.StringRelatedField()
+    stage = serializers.PrimaryKeyRelatedField(queryset=ReservationStatus.objects.all())
+    action_required = serializers.PrimaryKeyRelatedField(queryset=DecisionPoint.objects.all())
+    id = serializers.ReadOnlyField(source='pk')
 
     class Meta:
         model = Reservation

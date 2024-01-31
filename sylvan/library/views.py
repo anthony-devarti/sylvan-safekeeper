@@ -6,15 +6,12 @@ from rest_framework import permissions, viewsets
 from library.serializers import UserSerializer, ReservationStatusSerializer, LineItemSerializer, ReservationSerializer, DelinquencySerializer, DecisionPointSerializer
 from rest_framework import generics, filters
 from django_filters.rest_framework import DjangoFilterBackend
-<<<<<<< Updated upstream
-=======
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.contrib.auth import authenticate, login, logout
 from django.views.decorators.csrf import csrf_exempt
 import json
 from django.middleware.csrf import get_token
->>>>>>> Stashed changes
 
 # Create your views here.
 def index(request):

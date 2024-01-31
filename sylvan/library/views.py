@@ -8,6 +8,11 @@ from rest_framework import generics, filters
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from django.contrib.auth import authenticate, login, logout
+from django.views.decorators.csrf import csrf_exempt
+import json
+from django.middleware.csrf import get_token
+
 
 # Create your views here.
 def index(request):
@@ -23,6 +28,46 @@ def status_list(request):
         serializer = ReservationStatusSerializer(queryset, many=True)
         return JsonResponse(serializer.data, safe=False)
     # return HttpResponse('touching the status list')
+
+@csrf_exempt
+def login_view(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            username = data.get('username')
+            password = data.get('password')
+
+            user = authenticate(request, username=username, password=password)
+
+            if user:
+                login(request, user)
+                user_data = {
+                    'id': user.id,
+                    'username': user.username,
+                    'email': user.email
+                }
+                return JsonResponse({'message': 'Login successful', 'csrf_token': get_token(request), 'user': user_data})
+            else:
+                return JsonResponse({'error': 'Invalid credentials'}, status=401)
+
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON format'}, status=400)
+
+    return JsonResponse({'error': 'Invalid request method'}, status=400)
+
+@csrf_exempt
+def logout_view(request):
+    if request.method == 'POST':
+        try:
+            # Perform logout
+            logout(request)
+
+            return JsonResponse({'message': 'Logout successful'})
+        except Exception as e:
+            # Handle any potential exceptions during logout
+            return JsonResponse({'error': str(e)}, status=500)
+
+    return JsonResponse({'error': 'Invalid request method'}, status=400)
 
 class UserViewSet(viewsets.ModelViewSet):
     """

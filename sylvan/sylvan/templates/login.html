@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+</head>
+<body>
+    <h2>Login</h2>
+    <div id="login-form">
+        {% csrf_token %}
+        <!-- Your frontend code will handle the form rendering and submission -->
+        <!-- For example, you might have a <div> for your React component -->
+        <div id="login-root"></div>
+    </div>
+
+    <!-- Include your frontend scripts here (e.g., React, JavaScript) -->
+    <!-- Example: Load React and your React component -->
+    <script src="https://unpkg.com/react@17/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"></script>
+    <!-- Include your compiled React component script -->
+    <script src="http://localhost:3000/build/Components/UserAuth/LoginForm.js"></script>
+</body>
+</html>

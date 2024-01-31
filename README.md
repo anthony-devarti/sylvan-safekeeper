@@ -1,6 +1,5 @@
-# sl-db
-database for sylvan library
-
+# sylvan-safekeeper
+database for sylvan library and backend business logic
 
 this is the backend for the project found here: https://github.com/anthony-devarti/sylvan-library
 
@@ -33,3 +32,80 @@ this is the backend for the project found here: https://github.com/anthony-devar
   Dont forget to register this view with the admin portal so we can easily mess with it if needed.
 
   Use the serializers, it makes sure that every endpoint we create acts predictably and the same as the others.  Django docs help
+# Reservation Workflow Documentation
+
+## Overview
+
+The reservation workflow involves the lifecycle of a reservation, from its creation to completion. This document outlines the various stages and actions associated with the reservation process.
+
+## Reservation Stages
+
+### 1. Unrequested
+- **Description:** The initial stage when a borrower creates a reservation but has not submitted it.
+- **Actions:**
+  - `submit_reservation`: Submits the reservation, transitioning it to the "Pending" stage.
+
+### 2. Pending
+- **Description:** The reservation is awaiting approval from the lender.
+- **Actions:**
+  - `approve_reservation`: Approves the reservation, transitioning it to the "Approved" stage.
+  - `decline_reservation`: Declines the reservation, transitioning it to the "Cancelled" stage.
+
+### 3. Approved
+- **Description:** The lender has approved the reservation, and the cards are not yet in the borrower's possession.
+- **Actions:**
+  - `accept_delivery`: Confirms delivery and transitions to the "Borrowed" stage.
+
+### 4. Delivered
+- **Description:** The borrower has possession of the reservation but has not yet confirmed the contents.
+- **Actions:**
+  - `accept_delivery`: Confirms the contents, transitioning to the "Borrowed" stage.
+  - `decline_delivery`: Raises a dispute and transitions to the "Disputed" stage.
+
+### 5. Borrowed
+- **Description:** The borrower has possession of the reservation, and the return date has not passed.
+- **Actions:**
+  - `return_cards`: Initiates the return process, transitioning to the "Returned" stage.
+  - `report_cards_lost`: Reports lost cards and transitions to the "Lost" stage.
+  - `return_to_inventory`: Returns cards to inventory if the reservation is complete.
+
+### 6. Returned
+- **Description:** The reservation has been returned, and the lender needs to verify the contents.
+- **Actions:**
+  - `lender_accepts_return`: Accepts the return, transitioning to the "Complete" stage.
+  - `lender_declines_return`: Declines the return, transitioning back to the "Borrowed" stage.
+
+### 7. Complete
+- **Description:** The reservation is complete, and all cards are confirmed as returned and in good condition.
+
+### 8. Lost
+- **Description:** Cards are reported as lost, and the borrower has a liability.
+
+### 9. Disputed
+- **Description:** The borrower disputes the reservation, and the lender needs to address the issues.
+
+### 10. Late
+- **Description:** The reservation is overdue, and the borrower has not yet returned the items.
+
+### 11. Delinquent
+- **Description:** The borrower has received a delinquent strike, and the lender may disallow future reservations.
+
+## Actions
+
+- `submit_reservation`: Submits the reservation for approval.
+- `approve_reservation`: Lender approves the reservation.
+- `decline_reservation`: Lender declines the reservation.
+- `accept_delivery`: Confirms delivery of the reservation.
+- `decline_delivery`: Declines the delivery, raising a dispute.
+- `cancel_reservation`: Cancels the reservation.
+- `report_cards_lost`: Reports cards as lost.
+- `return_cards`: Initiates the return process.
+- `lender_accepts_return`: Lender accepts the returned items.
+- `lender_declines_return`: Lender declines the return.
+- `return_to_inventory`: Returns items to inventory.
+
+## Notes
+
+- Ensure proper validation and authorization for each action.
+- Follow the recommended workflow to maintain consistency.
+- Additional business logic may be added as needed.

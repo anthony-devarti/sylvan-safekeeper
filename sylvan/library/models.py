@@ -45,6 +45,197 @@ class Reservation(models.Model):
     default_state = models.BooleanField(default=False)
     action_required = models.BooleanField(default=False)
 
+    def submit_reservation(self):
+        unrequested_status = ReservationStatus.objects.get(name='Unrequested')
+
+        if self.status == unrequested_status:
+            # Additional logic for submitting reservation if needed...
+            
+            # Perform actions when reservation is submitted
+            lineitems = list(self.lineitem_set.all())
+            
+            # Transition to the next appropriate status, e.g., "Pending"
+            # Replace the following line with the appropriate status transition
+            self.status = ReservationStatus.objects.get(name='Pending')
+
+            self.save()
+
+            return {"message": "Reservation submitted successfully.", "status": self.status.name, "lineitems": lineitems}
+
+        return {"message": "Cannot submit reservation. Invalid reservation status."}
+
+    def approve_reservation(self):
+        pending_status = ReservationStatus.objects.get(name='Pending')
+        approved_status = ReservationStatus.objects.get(name='Approved')
+
+        if self.status == pending_status:
+            self.status = approved_status
+            # Perform additional actions if needed
+            self.save()
+            return {"message": "Delivery accepted successfully.", "status": self.status.name}
+
+        return {"message": "Cannot accept delivery. Invalid reservation status."}
+
+    def decline_reservation(self):
+        pending_status = ReservationStatus.objects.get(name='Pending')
+        cancelled_status = ReservationStatus.objects.get(name='Cancelled')
+
+        if self.status == pending_status:
+            self.status = cancelled_status
+            # Perform additional actions if needed
+            self.save()
+            # Update associated LineItems
+            self.lineitem_set.filter(hold=True).update(hold=False)
+            return {"message": "Delivery declined. Reservation is now in Disputed stage.", "status": self.status.name}
+
+        return {"message": "Cannot decline delivery. Invalid reservation status."}
+
+    def accept_delivery(self):
+        delivered_status = ReservationStatus.objects.get(name='Delivered')
+        borrowed_status = ReservationStatus.objects.get(name='Borrowed')
+
+        if self.status == delivered_status:
+            # Additional logic to confirm contents are correct...
+            
+            # Transition to "Borrowed" stage
+            self.status = borrowed_status
+            # Perform additional actions if needed
+            self.save()
+
+            # Recursively set all associated LineItems to borrowed=True
+            self.lineitem_set.filter(hold=True).update(borrowed=True)
+
+    def decline_delivery(self):
+        delivered_status = ReservationStatus.objects.get(name='Delivered')
+        disputed_status = ReservationStatus.objects.get(name='Disputed')
+
+        if self.status == delivered_status:
+            # Additional logic for declining delivery if needed...
+            
+            # Transition to "Disputed" stage
+            self.status = disputed_status
+            # Perform additional actions if needed
+            self.save()
+
+    def cancel_reservation(self):
+        delivered_status = ReservationStatus.objects.get(name='Delivered')
+        cancelled_status = ReservationStatus.objects.get(name='Cancelled')
+
+        if self.status == delivered_status:
+            # If the reservation is already delivered, cannot be cancelled
+            return {"message": "Cannot cancel a delivered reservation."}
+
+        # Transition to "Cancelled" stage
+        self.status = cancelled_status
+        # Perform additional actions if needed
+        self.save()
+
+        return {"message": "Reservation cancelled successfully."}
+    
+    #this is a very rough draft, since a lot of the funcitonality here is not yet set up.
+    def report_cards_lost(self, lost_inventory_ids):
+        borrowed_status = ReservationStatus.objects.get(name='Borrowed')
+        returned_status = ReservationStatus.objects.get(name='Returned')
+        lost_status = ReservationStatus.objects.get(name='Lost')
+
+        valid_statuses = [borrowed_status, returned_status]
+
+        if self.status not in valid_statuses:
+            return {"message": "Cannot report cards lost. Invalid reservation status."}
+
+        if self.status == lost_status:
+            return {"message": "Reservation is already in the 'Lost' stage."}
+
+        # Additional logic for reporting cards lost if needed...
+
+        lost_lineitems = self.lineitem_set.filter(id_inventory__in=lost_inventory_ids, borrowed=True, hold=False)
+        total_lost_value = sum(lost_item.value for lost_item in lost_lineitems)
+
+        # Transition to "Lost" stage
+        self.status = lost_status
+        self.save()
+
+        return {
+            "message": f"{lost_lineitems.count()} have been reported as lost. Please return all other items immediately. "
+                       f"Based on your reported losses, you have a liability of {total_lost_value}. "
+                       f"This liability may be greater if you have lost more than you claim to. "
+                       "The lender will need to approve you to borrow items again before you can start a new reservation.",
+            "status": self.status.name,
+            "lost_lineitems": [{"id_inventory": lost_item.id_inventory, "value": lost_item.value} for lost_item in lost_lineitems],
+            "total_lost_value": total_lost_value
+        }
+    
+    def return_cards(self):
+        borrowed_status = ReservationStatus.objects.get(name='Borrowed')
+        returned_status = ReservationStatus.objects.get(name='Returned')
+
+        if self.status == borrowed_status:
+            # Additional logic for returning cards if needed...
+
+            # Transition to "Returned" stage
+            self.status = returned_status
+            # Perform additional actions if needed
+            self.save()
+
+            return {"message": "Cards have been returned. Reservation is now in the 'Returned' stage. "
+                               "The contents of the return still need to be verified.", "status": self.status.name}
+
+        return {"message": "Cannot return cards. Invalid reservation status."}
+    
+    def lender_accepts_return(self):
+        returned_status = ReservationStatus.objects.get(name='Returned')
+        complete_status = ReservationStatus.objects.get(name='Complete')
+
+        if self.status == returned_status:
+            # Additional logic for lender accepting return if needed...
+
+            # Set lent=False for all associated line items
+            self.lineitem_set.filter(borrowed=True, hold=False).update(lent=False)
+
+            # Transition to "Complete" stage
+            self.status = complete_status
+            # Perform additional actions if needed
+            self.save()
+
+            return {"message": "Lender has accepted the return. Reservation is now in the 'Complete' stage. "
+                               "All associated line items have been updated as not lent.", "status": self.status.name}
+
+        return {"message": "Cannot accept return. Invalid reservation status."}
+    
+    #this is also pretty close to pseudocode.  We are doing something a little half-baked here in adjusting some line items.
+    def lender_declines_return(self, missing_inventory_ids):
+        returned_status = ReservationStatus.objects.get(name='Returned')
+        borrowed_status = ReservationStatus.objects.get(name='Borrowed')
+
+        if self.status == returned_status:
+            # Additional logic for lender declining return if needed...
+
+            # Set lent=False for all associated line items that are not missing
+            self.lineitem_set.filter(borrowed=True, hold=False).exclude(id_inventory__in=missing_inventory_ids).update(lent=False)
+
+            # Transition back to "Borrowed" stage
+            self.status = borrowed_status
+            # Perform additional actions if needed
+            self.save()
+
+            return {"message": "Lender has declined the return. Reservation is now back in the 'Borrowed' stage. "
+                               "Missing items have not been marked as not lent.", "status": self.status.name}
+
+        return {"message": "Cannot decline return. Invalid reservation status."}
+    
+    def return_to_inventory(self, missing_cards):
+        complete_status = ReservationStatus.objects.get(name='Complete')
+
+        if self.status == complete_status:
+            # Additional logic for returning to inventory if needed...
+
+            # Set hold=False for all associated line items that are not missing
+            self.lineitem_set.filter(borrowed=False).exclude(id_inventory__in=missing_cards).update(hold=False)
+
+            return {"message": "Items have been returned to inventory. Hold status updated for non-missing items."}
+
+        return {"message": "Cannot return to inventory. Invalid reservation status."}
+
     def __str__(self):
         return str(self.return_date)
         

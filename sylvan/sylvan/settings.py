@@ -52,6 +52,11 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    # Add other authentication backends as needed
+]
+
 CORS_ALLOW_ALL_ORIGINS: False
 
 CORS_ALLOWED_ORIGINS = [
@@ -64,7 +69,7 @@ CORS_ORIGIN_WHITELIST = (
     'http://localhost:3000'
 )
 
-# CSRF_TRUSTED_ORIGINS = [ 'https://***.gitpod.io', 'localhost:3000' ] #This is bad.
+CSRF_TRUSTED_ORIGINS = [ "http://127.0.0.1:8000/", 'http://localhost:3000' ] #This is bad.
 
 
 ROOT_URLCONF = 'sylvan.urls'

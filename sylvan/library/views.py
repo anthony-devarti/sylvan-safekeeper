@@ -116,6 +116,58 @@ class ReservationViewSet(viewsets.ModelViewSet):
     serializer_class = ReservationSerializer
     filterset_fields = ['id_user', 'stage']
 
+    @action(detail=True, methods=['post'])
+    def submit_reservation(self, request, pk=None):
+        reservation = self.get_object()
+
+        try:
+            response_data = reservation.submit_reservation()
+
+            # Constructing the HTTP response
+            return Response({
+                'message': response_data['message'],
+                'status': response_data['status'],
+                'lineitems': response_data['lineitems'],
+            }, status=200)
+
+        except Exception as e:
+            # Handling exceptions and returning an error response
+            return Response({'error': str(e)}, status=400)
+    
+    @action(detail=True, methods=['post'])
+    def approve_reservation(self):
+        reservation = self.get_object()
+
+        try:
+            response_data = reservation.approve_reservation()
+
+            # Constructing the HTTP response
+            return Response({
+                'message': response_data['message'],
+                'status': response_data['status'],
+            }, status=200)
+
+        except Exception as e:
+            # Handling exceptions and returning an error response
+            return Response({'error': str(e)}, status=400)
+        
+    @action(detail=True, methods=['post'])
+    def decline_reservation(self, request, pk=None):
+        reservation = self.get_object()
+
+        try:
+            response_data = reservation.decline_reservation()
+
+            # Constructing the HTTP response
+            return Response({
+                'message': response_data['message'],
+                'status': response_data['status'],
+            }, status=200)
+
+        except Exception as e:
+            # Handling exceptions and returning an error response
+            return Response({'error': str(e)}, status=400)
+
 class DelinquencyViewSet(viewsets.ModelViewSet):
     """
     API Endpoint that allows delinquencies to be viewed or edited.

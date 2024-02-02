@@ -45,6 +45,11 @@ class ReservationSerializer(serializers.HyperlinkedModelSerializer):
         model = Reservation
         fields = '__all__'
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['id'] = instance.id
+        return data
+
 class DelinquencySerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Delinquency

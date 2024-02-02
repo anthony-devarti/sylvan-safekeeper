@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 from library.models import ReservationStatus, LineItem, Reservation, Delinquency, DecisionPoint
 from django.contrib.auth.models import Group, User
-from rest_framework import permissions, viewsets
+from rest_framework import permissions, viewsets, status
 from library.serializers import UserSerializer, ReservationStatusSerializer, LineItemSerializer, ReservationSerializer, DelinquencySerializer, DecisionPointSerializer
 from rest_framework import generics, filters
 from django_filters.rest_framework import DjangoFilterBackend
@@ -93,6 +93,36 @@ class LineItemViewSet(viewsets.ModelViewSet):
     # filter_backends=['DjangoFilterBackend']
     filterset_fields = ['hold', 'id_inventory']
 
+    # customize creating a line item so it returns the full basket 
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+
+        # Assuming you have the new_line_item created
+        related_line_items = LineItem.objects.filter(hold=True, id_reservation=serializer.data['id_reservation'])
+
+        # Serialize the related line items
+        related_line_items_data = LineItemSerializer(related_line_items, many=True).data
+
+        headers = self.get_success_headers(serializer.data)
+
+        return Response(related_line_items_data, status=status.HTTP_201_CREATED, headers=headers)
+
+    @action(detail=True, methods=['put'])
+    def remove_from_basket(self, request, pk=None):
+        line_item = self.get_object()
+        line_item.hold = False
+        line_item.save()
+
+        # Assuming you have the updated_line_item
+        updated_line_items = LineItem.objects.filter(hold=True, id_reservation=line_item.id_reservation)
+
+        # Serialize the updated line items
+        updated_line_items_data = LineItemSerializer(updated_line_items, many=True).data
+
+        return Response(updated_line_items_data)
+
     # this exclusively is used to release all items associated with a single reservation from hold 
     @action(detail=False, methods=['post'])
     def release_line_items(self, request):
@@ -121,7 +151,7 @@ class ReservationViewSet(viewsets.ModelViewSet):
         reservation = self.get_object()
 
         try:
-            response_data = reservation.submit_reservation()
+            response_data = reservation.submit()
 
             # Constructing the HTTP response
             return Response({

@@ -2,27 +2,6 @@ from django.db import models
 from django.utils import timezone
 
 # Create your models here.
-class LineItem(models.Model):
-    id_reservation = models.IntegerField(default=0)
-    id_inventory = models.IntegerField(default=0)
-    #There is an important distinction between hold and lent.
-    # Hold means that the item is unavailable to show up in searches
-    # lent means that the card is currently not in the lender's posession
-    lent = models.BooleanField(default=False)
-    hold = models.BooleanField(default=False)
-    date_created = models.DateTimeField(editable = False)
-    last_updated = models.DateTimeField(editable = False)
-
-    def __str__(self):
-        id = str(self.id_inventory)
-        return id
-    
-    def save(self, *args, **kwargs):
-        '''on save, update timestamps'''
-        if not self.id:
-            self.date_created = timezone.now()
-        self.last_updated = timezone.now()
-        return super(LineItem, self).save(*args, **kwargs)
 
 class ReservationStatus(models.Model):
     name = models.CharField(max_length=200)
@@ -52,28 +31,34 @@ class Reservation(models.Model):
     return_date = models.DateTimeField()
     date_created = models.DateTimeField(editable = False, null=True)
     last_updated = models.DateTimeField(editable = False, null=True)
-    stage = models.ForeignKey(ReservationStatus, on_delete=models.CASCADE, default=1)
+    stage = models.ForeignKey(ReservationStatus, on_delete=models.CASCADE, default=13, null=True)
     complete = models.BooleanField(default=False)
     lost = models.BooleanField(default=False)
     default_state = models.BooleanField(default=False)
     action_required = models.ForeignKey(DecisionPoint, on_delete=models.CASCADE)
 
-    def submit_reservation(self):
+    def submit(self):
+        from .serializers import LineItemSerializer
         unrequested_status = ReservationStatus.objects.get(name='Unrequested')
 
-        if self.status == unrequested_status:
+        # check to ensure the reservation being submitted is unrequested
+        if self.stage == unrequested_status:
             # Additional logic for submitting reservation if needed...
             
             # Perform actions when reservation is submitted
-            lineitems = list(self.lineitem_set.all())
+            lineitems = self.lineitem.all()
+            lineitem_serializer = LineItemSerializer(lineitems, many=True)
+            serialized_lineitems = lineitem_serializer.data
             
             # Transition to the next appropriate status, e.g., "Pending"
             # Replace the following line with the appropriate status transition
-            self.status = ReservationStatus.objects.get(name='Pending')
-
+            try:
+                self.stage = ReservationStatus.objects.get(name='Pending')
+            except ReservationStatus.DoesNotExist as e:
+                print(f"Error: {e}")
             self.save()
 
-            return {"message": "Reservation submitted successfully.", "status": self.status.name, "lineitems": lineitems}
+            return {"message": "Reservation submitted successfully.", "status": self.stage.name, "lineitems": serialized_lineitems}
 
         return {"message": "Cannot submit reservation. Invalid reservation status."}
 
@@ -252,6 +237,29 @@ class Reservation(models.Model):
     def __str__(self):
         return str(self.return_date)
         
+class LineItem(models.Model):
+    id_reservation = models.ForeignKey(Reservation, on_delete=models.CASCADE, related_name='lineitem')
+    id_inventory = models.IntegerField(default=0)
+    #There is an important distinction between hold and lent.
+    # Hold means that the item is unavailable to show up in searches
+    # lent means that the card is currently not in the lender's posession
+    lent = models.BooleanField(default=False)
+    hold = models.BooleanField(default=False)
+    date_created = models.DateTimeField(editable = False)
+    last_updated = models.DateTimeField(editable = False)
+    name = models.CharField(max_length=200)
+
+    def __str__(self):
+        id = str(self.id_inventory)
+        return id
+    
+    def save(self, *args, **kwargs):
+        '''on save, update timestamps'''
+        if not self.id:
+            self.date_created = timezone.now()
+        self.last_updated = timezone.now()
+        return super(LineItem, self).save(*args, **kwargs)
+
 class Delinquency(models.Model):
     id_user = models.IntegerField(default=0)
     id_reservation = models.IntegerField(default=0)

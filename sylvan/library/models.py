@@ -22,6 +22,12 @@ class DecisionPoint(models.Model):
     #check these, because I got them mixed up at one point.
     destination_on_decline = models.ForeignKey(ReservationStatus, related_name='destination_on_decline', on_delete=models.CASCADE)
     destination_on_success = models.ForeignKey(ReservationStatus, related_name='destination_on_success', on_delete=models.CASCADE)
+    accept_button = models.CharField(max_length = 200, default ='Accept')
+    decline_button = models.CharField(max_length = 200, default='Decline') 
+    responsibility = models.CharField(max_length=200, default='borrower')
+    header = models.CharField(max_length=200, default='Decision')
+    button_text = models.CharField(max_length=200, default='Address Action')
+
 
     def __str__(self):
         return self.title
@@ -91,17 +97,25 @@ class Reservation(models.Model):
     def accept_delivery(self):
         delivered_status = ReservationStatus.objects.get(name='Delivered')
         borrowed_status = ReservationStatus.objects.get(name='Borrowed')
+        lender_received_action = DecisionPoint.objects.get(title='lender_received_by_due_date')
 
-        if self.status == delivered_status:
+        if self.stage == delivered_status:
             # Additional logic to confirm contents are correct...
             
             # Transition to "Borrowed" stage
-            self.status = borrowed_status
+            self.stage = borrowed_status
+            # Update action_required to lender_received_by_due_date
+            self.action_required = lender_received_action
             # Perform additional actions if needed
             self.save()
 
             # Recursively set all associated LineItems to borrowed=True
-            self.lineitem_set.filter(hold=True).update(borrowed=True)
+            self.lineitem.filter(hold=True).update(Lent=True)
+
+            return {"message": "Delivery accepted successfully.", "status": self.stage.name}
+
+        return {"message": "Cannot accept delivery. Invalid reservation status."}
+
 
     def decline_delivery(self):
         delivered_status = ReservationStatus.objects.get(name='Delivered')
@@ -235,7 +249,7 @@ class Reservation(models.Model):
         return {"message": "Cannot return to inventory. Invalid reservation status."}
 
     def __str__(self):
-        return str(self.return_date)
+        return str(self.id)
         
 class LineItem(models.Model):
     id_reservation = models.ForeignKey(Reservation, on_delete=models.CASCADE, related_name='lineitem')

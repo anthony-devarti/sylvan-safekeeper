@@ -44,6 +44,14 @@ class DelinquencySerializer(serializers.HyperlinkedModelSerializer):
         fields = '__all__'
 
 class DecisionPointSerializer(serializers.HyperlinkedModelSerializer):
+    destination_on_decline = serializers.StringRelatedField(source='destination_on_decline.name', read_only=True)
+    destination_on_success = serializers.StringRelatedField(source='destination_on_success.name', read_only=True)
+    
     class Meta:
         model = DecisionPoint
         fields = '__all__'
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['id'] = instance.id
+        return data

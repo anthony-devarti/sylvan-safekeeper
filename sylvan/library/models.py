@@ -178,21 +178,33 @@ class Reservation(models.Model):
         }
     
     def return_cards(self):
-        borrowed_status = ReservationStatus.objects.get(name='Borrowed')
+    # Check if the reservation is already in the "Returned" stage
+        if self.stage.name == 'Returned':
+            return {"message": "Cannot return cards. Reservation is already in the 'Returned' stage."}
+
+        # Check if the reservation is not in the "Borrowed" stage
+        if self.stage.name != 'Borrowed':
+            return {"message": "Cannot return cards. Invalid reservation status."}
+
+        # Additional logic for returning cards if needed...
+
+        # Transition to "Returned" stage
         returned_status = ReservationStatus.objects.get(name='Returned')
+        self.stage = returned_status
 
-        if self.status == borrowed_status:
-            # Additional logic for returning cards if needed...
+        # Set action_required to lender_accepts_return
+        lender_accepts_return = DecisionPoint.objects.get(title='lender_accepts_return')
+        self.action_required = lender_accepts_return
 
-            # Transition to "Returned" stage
-            self.status = returned_status
-            # Perform additional actions if needed
-            self.save()
+        # Perform additional actions if needed
+        self.save()
 
-            return {"message": "Cards have been returned. Reservation is now in the 'Returned' stage. "
-                               "The contents of the return still need to be verified.", "status": self.status.name}
+        # Set all associated LineItems with lent=True to lent=False
+        self.lineitem.filter(lent=True).update(lent=False)
 
-        return {"message": "Cannot return cards. Invalid reservation status."}
+        return {"message": "Cards have been returned. Reservation is now in the 'Returned' stage. "
+                        "The contents of the return still need to be verified.",
+                "status": self.stage.name}
     
     def lender_accepts_return(self):
         returned_status = ReservationStatus.objects.get(name='Returned')

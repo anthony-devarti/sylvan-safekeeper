@@ -198,6 +198,23 @@ class ReservationViewSet(viewsets.ModelViewSet):
             # Handling exceptions and returning an error response
             return Response({'error': str(e)}, status=400)
 
+    @action(detail=True, methods=['post'])
+    def return_cards(self, request, pk=None):
+        reservation = self.get_object()
+
+        try:
+            response_data = reservation.return_cards()
+
+            # Constructing the HTTP response
+            return Response({
+                'message': response_data['message'],
+                'status': response_data['status'],
+            }, status=200)
+
+        except Exception as e:
+            # Handling exceptions and returning an error response
+            return Response({'error': str(e)}, status=400)
+        
 class DelinquencyViewSet(viewsets.ModelViewSet):
     """
     API Endpoint that allows delinquencies to be viewed or edited.

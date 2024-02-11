@@ -91,7 +91,7 @@ class LineItemViewSet(viewsets.ModelViewSet):
     queryset = LineItem.objects.all()
     serializer_class = LineItemSerializer
     # filter_backends=['DjangoFilterBackend']
-    filterset_fields = ['hold', 'id_inventory']
+    filterset_fields = ['hold', 'id_inventory', 'id_reservation']
 
     # customize creating a line item so it returns the full basket 
     def create(self, request, *args, **kwargs):
@@ -151,7 +151,19 @@ class ReservationViewSet(viewsets.ModelViewSet):
         reservation = self.get_object()
 
         try:
-            response_data = reservation.submit()
+            # Get relevant data from the request payload
+            note = request.data.get('note', '')
+            pickup_method = request.data.get('pickup_method', '')
+            return_date = request.data.get('return_date', '')
+            pickup_date = request.data.get('pickup_date', '')
+
+            # Call the submit method with the relevant data
+            response_data = reservation.submit(
+                note=note,
+                pickup_method=pickup_method,
+                return_date=return_date,
+                pickup_date=pickup_date
+            )
 
             # Constructing the HTTP response
             return Response({

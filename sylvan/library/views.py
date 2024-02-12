@@ -147,6 +147,19 @@ class ReservationViewSet(viewsets.ModelViewSet):
     filterset_fields = ['id_user', 'stage']
 
     @action(detail=True, methods=['post'])
+    def clear_basket(self, request, pk=None):
+        reservation = self.get_object()
+
+        try:
+            response_data = reservation.clear_basket()
+            return Response ({
+                'message': response_data['message'],
+                'items' : response_data['removed_lineitems']
+            })
+        except Exception as e:
+            return Response({'error': str(e)}, status=400)
+
+    @action(detail=True, methods=['post'])
     def submit_reservation(self, request, pk=None):
         reservation = self.get_object()
 

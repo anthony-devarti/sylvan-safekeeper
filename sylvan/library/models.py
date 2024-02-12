@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils import timezone
+from datetime import datetime
 
 # Create your models here.
 
@@ -36,37 +37,61 @@ class Reservation(models.Model):
     id_user = models.IntegerField(default=0)
     return_date = models.DateTimeField()
     date_created = models.DateTimeField(editable = False, null=True)
-    last_updated = models.DateTimeField(editable = False, null=True)
+    last_updated = models.DateTimeField(null=True)
     stage = models.ForeignKey(ReservationStatus, on_delete=models.CASCADE, default=13, null=True)
     complete = models.BooleanField(default=False)
     lost = models.BooleanField(default=False)
     default_state = models.BooleanField(default=False)
     action_required = models.ForeignKey(DecisionPoint, on_delete=models.CASCADE)
+    pickup_date = models.DateTimeField(null = True)
+    note = models.CharField(max_length = 300, null=True)
+    pickup_method = models.CharField(max_length = 200, null=True)
 
-    def submit(self):
+    def submit(self, note='', pickup_method='', return_date='', pickup_date=None):
         from .serializers import LineItemSerializer
-        unrequested_status = ReservationStatus.objects.get(name='Unrequested')
+        # Parse submitted return_date string into a datetime object
+        return_datetime = datetime.strptime(return_date, "%Y-%m-%dT%H:%M")
+        # Make return_datetime timezone-aware
+        return_datetime_aware = timezone.make_aware(return_datetime)
 
-        # check to ensure the reservation being submitted is unrequested
-        if self.stage == unrequested_status:
-            # Additional logic for submitting reservation if needed...
-            
-            # Perform actions when reservation is submitted
-            lineitems = self.lineitem.all()
-            lineitem_serializer = LineItemSerializer(lineitems, many=True)
-            serialized_lineitems = lineitem_serializer.data
-            
-            # Transition to the next appropriate status, e.g., "Pending"
-            # Replace the following line with the appropriate status transition
-            try:
-                self.stage = ReservationStatus.objects.get(name='Pending')
-            except ReservationStatus.DoesNotExist as e:
+        # Set additional fields
+        self.note = note
+        self.pickup_method = pickup_method
+        self.return_date = return_datetime_aware  # Set the timezone-aware datetime
+
+        # Check if pickup_date has a value before processing
+        if pickup_date is not None:
+            # Parse submitted pickup_date string into a datetime object
+            pickup_datetime = datetime.strptime(pickup_date, "%Y-%m-%dT%H:%M")
+
+            # Make pickup_datetime timezone-aware
+            pickup_datetime_aware = timezone.make_aware(pickup_datetime)
+
+            # Set pickup_date to the timezone-aware datetime
+            self.pickup_date = pickup_datetime_aware
+        else:
+            # If pickup_date is None, leave it as None
+            self.pickup_date = None
+        # Set last_updated to the current time
+        self.last_updated = timezone.now()
+
+        # Transition to the next appropriate status, e.g., "Pending"
+        try:
+            self.stage = ReservationStatus.objects.get(name='Pending')
+        except ReservationStatus.DoesNotExist as e:
                 print(f"Error: {e}")
+        # Save the changes
+        try:
             self.save()
+        except Exception as e:
+            print(f"Error while saving: {e}")
+            raise
+        # Perform actions when reservation is submitted
+        lineitems = self.lineitem.all()
+        lineitem_serializer = LineItemSerializer(lineitems, many=True)
+        serialized_lineitems = lineitem_serializer.data
 
-            return {"message": "Reservation submitted successfully.", "status": self.stage.name, "lineitems": serialized_lineitems}
-
-        return {"message": "Cannot submit reservation. Invalid reservation status."}
+        return {"message": "Reservation submitted successfully.", "status": self.stage.name, "lineitems": serialized_lineitems}
 
     def approve_reservation(self):
         pending_status = ReservationStatus.objects.get(name='Pending')
@@ -74,6 +99,8 @@ class Reservation(models.Model):
 
         if self.status == pending_status:
             self.status = approved_status
+            # Set last_updated to the current time
+            self.last_updated = timezone.now()
             # Perform additional actions if needed
             self.save()
             return {"message": "Delivery accepted successfully.", "status": self.status.name}
@@ -86,7 +113,8 @@ class Reservation(models.Model):
 
         if self.status == pending_status:
             self.status = cancelled_status
-            # Perform additional actions if needed
+            # Set last_updated to the current time
+            self.last_updated = timezone.now()
             self.save()
             # Update associated LineItems
             self.lineitem_set.filter(hold=True).update(hold=False)
@@ -106,7 +134,8 @@ class Reservation(models.Model):
             self.stage = borrowed_status
             # Update action_required to lender_received_by_due_date
             self.action_required = lender_received_action
-            # Perform additional actions if needed
+            # Set last_updated to the current time
+            self.last_updated = timezone.now()
             self.save()
 
             # Recursively set all associated LineItems to borrowed=True
@@ -126,7 +155,8 @@ class Reservation(models.Model):
             
             # Transition to "Disputed" stage
             self.status = disputed_status
-            # Perform additional actions if needed
+            # Set last_updated to the current time
+            self.last_updated = timezone.now()
             self.save()
 
     def cancel_reservation(self):
@@ -139,7 +169,8 @@ class Reservation(models.Model):
 
         # Transition to "Cancelled" stage
         self.status = cancelled_status
-        # Perform additional actions if needed
+        # Set last_updated to the current time
+        self.last_updated = timezone.now()
         self.save()
 
         return {"message": "Reservation cancelled successfully."}
@@ -165,6 +196,8 @@ class Reservation(models.Model):
 
         # Transition to "Lost" stage
         self.status = lost_status
+        # Set last_updated to the current time
+        self.last_updated = timezone.now()
         self.save()
 
         return {
@@ -196,7 +229,8 @@ class Reservation(models.Model):
         lender_accepts_return = DecisionPoint.objects.get(title='lender_accepts_return')
         self.action_required = lender_accepts_return
 
-        # Perform additional actions if needed
+        # Set last_updated to the current time
+        self.last_updated = timezone.now()
         self.save()
 
         # Set all associated LineItems with lent=True to lent=False
@@ -218,7 +252,8 @@ class Reservation(models.Model):
 
             # Transition to "Complete" stage
             self.status = complete_status
-            # Perform additional actions if needed
+            # Set last_updated to the current time
+            self.last_updated = timezone.now()
             self.save()
 
             return {"message": "Lender has accepted the return. Reservation is now in the 'Complete' stage. "
@@ -239,7 +274,8 @@ class Reservation(models.Model):
 
             # Transition back to "Borrowed" stage
             self.status = borrowed_status
-            # Perform additional actions if needed
+            # Set last_updated to the current time
+            self.last_updated = timezone.now()
             self.save()
 
             return {"message": "Lender has declined the return. Reservation is now back in the 'Borrowed' stage. "
@@ -255,6 +291,9 @@ class Reservation(models.Model):
 
             # Set hold=False for all associated line items that are not missing
             self.lineitem_set.filter(borrowed=False).exclude(id_inventory__in=missing_cards).update(hold=False)
+            # Set last_updated to the current time
+            self.last_updated = timezone.now()
+            self.save()
 
             return {"message": "Items have been returned to inventory. Hold status updated for non-missing items."}
 

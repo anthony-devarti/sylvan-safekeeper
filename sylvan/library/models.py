@@ -47,6 +47,37 @@ class Reservation(models.Model):
     note = models.CharField(max_length = 300, null=True)
     pickup_method = models.CharField(max_length = 200, null=True)
 
+    def clear_basket(self):
+            try:
+                # Find all lineitems associated with this reservation that have hold=True
+                lineitems_to_clear = self.lineitem.filter(hold=True)
+
+                # Update hold status to False for each lineitem
+                for lineitem in lineitems_to_clear:
+                    lineitem.hold = False
+                    lineitem.save()
+
+                # Set self.last_updated to timezone.now()
+                self.last_updated = timezone.now()
+                self.save()
+
+                # Return array of removed line items and a success message
+                removed_lineitems = [
+                    {"id": lineitem.id, "name": lineitem.name} for lineitem in lineitems_to_clear
+                ]
+                return {
+                    "success": True,
+                    "message": f"Successfully cleared basket. Removed {len(removed_lineitems)} line items.",
+                    "removed_lineitems": removed_lineitems,
+                }
+
+            except Exception as e:
+                # Handle exceptions and return an error message
+                return {
+                    "success": False,
+                    "message": f"Error clearing basket: {str(e)}",
+                    "removed_lineitems": [],
+                }
     def submit(self, note='', pickup_method='', return_date='', pickup_date=None):
         from .serializers import LineItemSerializer
         # Parse submitted return_date string into a datetime object

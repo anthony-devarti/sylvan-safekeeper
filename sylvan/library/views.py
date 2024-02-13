@@ -144,7 +144,7 @@ class ReservationViewSet(viewsets.ModelViewSet):
     """
     queryset = Reservation.objects.all()
     serializer_class = ReservationSerializer
-    filterset_fields = ['id_user', 'stage']
+    filterset_fields = ['id_user', 'stage', 'complete', 'lost']
 
     @action(detail=True, methods=['post'])
     def clear_basket(self, request, pk=None):
@@ -222,6 +222,20 @@ class ReservationViewSet(viewsets.ModelViewSet):
         except Exception as e:
             # Handling exceptions and returning an error response
             return Response({'error': str(e)}, status=400)
+
+    @action(detail=True, methods=['post'])
+    def accept_delivery(self, request, pk=None):
+        reservation = self.get_object()
+
+        try:
+            response_data = reservation.accept_delivery()
+
+            return Response({
+                'message': response_data['message'],
+                'status': response_data['status'],
+            }, status=200)
+        except Exception as e:
+            return Response({'error':str(e)}, status=400)
 
     @action(detail=True, methods=['post'])
     def return_cards(self, request, pk=None):

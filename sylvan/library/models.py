@@ -78,6 +78,7 @@ class Reservation(models.Model):
                     "message": f"Error clearing basket: {str(e)}",
                     "removed_lineitems": [],
                 }
+    
     def submit(self, note='', pickup_method='', return_date='', pickup_date=None):
         from .serializers import LineItemSerializer
         # Parse submitted return_date string into a datetime object
@@ -170,7 +171,7 @@ class Reservation(models.Model):
             self.save()
 
             # Recursively set all associated LineItems to borrowed=True
-            self.lineitem.filter(hold=True).update(Lent=True)
+            self.lineitem.filter(hold=True).update(lent=True)
 
             return {"message": "Delivery accepted successfully.", "status": self.stage.name}
 

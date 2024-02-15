@@ -331,6 +331,7 @@ class Reservation(models.Model):
         return {"message": "Cannot return to inventory. Invalid reservation status."}
 
     def open_case(self, id_user, note, items):
+        print('in the open case method')
         # Create a new instance of Case
         new_case = Case.objects.create(id_user=id_user, id_reservation=self, note=note)
 
@@ -342,16 +343,22 @@ class Reservation(models.Model):
 
         # Save the changes to the reservation instance
         self.save()
-
         # Create ProblemLineItem instances for each item
         serialized_lineitems = []
 
-        for item_info in items:
+        for key, item_info in items.items():
             line_item = LineItem.objects.get(id=item_info["id"])
-            problem_line_item = ProblemLineItem.objects.create(id_case=new_case, item=line_item, issue=item_info["issue"])
+            
+            # Assuming "selectedValue" property is part of item_info
+            problem_line_item = ProblemLineItem.objects.create(
+                id_case=new_case,
+                item=line_item,
+                issue=item_info.get("selectedValue", "General Problem")
+            )
+
             serialized_lineitems.append({
                 "item_id": line_item.id,
-                "issue": item_info["issue"],
+                "issue": item_info.get("selectedValue", "General Problem") 
             })
 
         # Save the new_case instance
@@ -407,7 +414,7 @@ class Case(models.Model):
     entire_reservation_issue = models.BooleanField(default=False)
 
     def __str__(self):
-        return str(self.id_reservation)
+        return 'Case #' + str(self.id) + ' on Reservation #' + str(self.id_reservation)
     
 class ProblemLineItem(models.Model):
     # this should be a fk to the case

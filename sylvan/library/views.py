@@ -265,7 +265,7 @@ class ReservationViewSet(viewsets.ModelViewSet):
         # Assuming the request data contains 'id_user', 'note', and 'items'
         id_user = request.data.get('id_user')
         note = request.data.get('note')
-        items = request.data.get('items', [])
+        items = request.data.get('line_item_problems', [])
 
         response = reservation.open_case(id_user=id_user, items=items, note=note)
 

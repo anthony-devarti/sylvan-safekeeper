@@ -177,7 +177,6 @@ class Reservation(models.Model):
 
         return {"message": "Cannot accept delivery. Invalid reservation status."}
 
-
     def decline_delivery(self):
         delivered_status = ReservationStatus.objects.get(name='Delivered')
         disputed_status = ReservationStatus.objects.get(name='Disputed')
@@ -331,6 +330,35 @@ class Reservation(models.Model):
 
         return {"message": "Cannot return to inventory. Invalid reservation status."}
 
+    def open_case(self, id_user, note, items):
+        # Create a new instance of Case
+        new_case = Case.objects.create(id_user=id_user, id_reservation=self, note=note)
+
+        # Update the reservation stage to "disputed"
+        self.stage = ReservationStatus.objects.get(name='Disputed')
+
+        # Update the action_required field to "lender_corrects"
+        self.action_required = DecisionPoint.objects.get(title='lender_corrects')
+
+        # Save the changes to the reservation instance
+        self.save()
+
+        # Create ProblemLineItem instances for each item
+        serialized_lineitems = []
+
+        for item_info in items:
+            line_item = LineItem.objects.get(id=item_info["id"])
+            problem_line_item = ProblemLineItem.objects.create(id_case=new_case, item=line_item, issue=item_info["issue"])
+            serialized_lineitems.append({
+                "item_id": line_item.id,
+                "issue": item_info["issue"],
+            })
+
+        # Save the new_case instance
+        new_case.save()
+
+        return {"message": f"Case # {new_case.id} has been opened.", "case_id": new_case.id, "lineitems": serialized_lineitems}
+
     def __str__(self):
         return str(self.id)
         
@@ -368,3 +396,25 @@ class Delinquency(models.Model):
     
     class Meta():
         verbose_name_plural = "Delinquencies"
+
+#A case opened by the submission of the ProblemForm
+class Case(models.Model):
+    # I dont think this needs to be an fk 
+    id_user = models.IntegerField(default=0)
+    id_reservation = models.ForeignKey(Reservation, on_delete=models.CASCADE, related_name='case')
+    closed = models.BooleanField(default=False)
+    note = models.CharField(max_length=200)
+    entire_reservation_issue = models.BooleanField(default=False)
+
+    def __str__(self):
+        return str(self.id_reservation)
+    
+class ProblemLineItem(models.Model):
+    # this should be a fk to the case
+    id_case = models.ForeignKey(Case, on_delete=models.CASCADE, related_name='problem_line_item')
+    # this should be an fk to the lineitem instance 
+    item = models.ForeignKey(LineItem, on_delete=models.CASCADE, related_name='problem_line_item')
+    issue = models.CharField(max_length=200)
+
+    def __str__(self):
+        return str(self.id_case)

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from library.models import ReservationStatus, LineItem, Reservation, Delinquency, DecisionPoint
+from library.models import ReservationStatus, LineItem, Reservation, Delinquency, DecisionPoint, Case, ProblemLineItem
 from django.contrib.auth.models import Group, User
 
 
@@ -37,6 +37,12 @@ class ReservationSerializer(serializers.HyperlinkedModelSerializer):
         data = super().to_representation(instance)
         data['id'] = instance.id
         return data
+    
+# Have a separate serializer for cases so I don't have to deal with the representation differences 
+class CaseReservationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Reservation
+        fields = '__all__'
 
 class DelinquencySerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
@@ -55,3 +61,13 @@ class DecisionPointSerializer(serializers.HyperlinkedModelSerializer):
         data = super().to_representation(instance)
         data['id'] = instance.id
         return data
+    
+class CaseSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = Case
+        fields = '__all__'
+
+class ProblemLineItemSerializer(serializers.HyperlinkedModelSerializer):
+    class Meta:
+        model = ProblemLineItem
+        fields = '__all__'

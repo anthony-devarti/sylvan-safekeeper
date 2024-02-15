@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.contrib.auth.models import User
 from rest_framework import routers, serializers, viewsets
-from library.views import UserViewSet, ReservationStatusViewSet, LineItemViewSet, ReservationViewSet, DelinquencyViewSet, DecisionPointViewSet, login_view, logout_view
+from library.views import UserViewSet, ReservationStatusViewSet, LineItemViewSet, ReservationViewSet, DelinquencyViewSet, DecisionPointViewSet, login_view, logout_view, CaseViewSet, ProblemLineItemViewSet
 from django.contrib.auth.views import LoginView
 
 # # Serializers define the API representation.
@@ -40,6 +40,8 @@ router.register(r'lineitem', LineItemViewSet)
 router.register(r'reservation', ReservationViewSet)
 router.register(r'delinquency', DelinquencyViewSet)
 router.register(r'decisionpoint', DecisionPointViewSet)
+router.register(r'cases', CaseViewSet)
+router.register(r'problemlineitems', ProblemLineItemViewSet)
 
 urlpatterns = [
     path("library/", include("library.urls")),

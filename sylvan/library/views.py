@@ -1,9 +1,9 @@
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
-from library.models import ReservationStatus, LineItem, Reservation, Delinquency, DecisionPoint
+from library.models import ReservationStatus, LineItem, Reservation, Delinquency, DecisionPoint, Case, ProblemLineItem
 from django.contrib.auth.models import Group, User
 from rest_framework import permissions, viewsets, status
-from library.serializers import UserSerializer, ReservationStatusSerializer, LineItemSerializer, ReservationSerializer, DelinquencySerializer, DecisionPointSerializer
+from library.serializers import UserSerializer, ReservationStatusSerializer, LineItemSerializer, ReservationSerializer, DelinquencySerializer, DecisionPointSerializer, CaseSerializer, ProblemLineItemSerializer
 from rest_framework import generics, filters
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import action
@@ -146,6 +146,10 @@ class ReservationViewSet(viewsets.ModelViewSet):
     serializer_class = ReservationSerializer
     filterset_fields = ['id_user', 'stage', 'complete', 'lost']
 
+    @csrf_exempt
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
     @action(detail=True, methods=['post'])
     def clear_basket(self, request, pk=None):
         reservation = self.get_object()
@@ -253,6 +257,19 @@ class ReservationViewSet(viewsets.ModelViewSet):
         except Exception as e:
             # Handling exceptions and returning an error response
             return Response({'error': str(e)}, status=400)
+
+    @action(detail=True, methods=['post'])
+    def open_case(self, request, pk=None):
+        reservation = self.get_object()
+
+        # Assuming the request data contains 'id_user', 'note', and 'items'
+        id_user = request.data.get('id_user')
+        note = request.data.get('note')
+        items = request.data.get('items', [])
+
+        response = reservation.open_case(id_user=id_user, items=items, note=note)
+
+        return Response(response)
         
 class DelinquencyViewSet(viewsets.ModelViewSet):
     """
@@ -268,3 +285,20 @@ class DecisionPointViewSet(viewsets.ModelViewSet):
     """
     queryset = DecisionPoint.objects.all()
     serializer_class = DecisionPointSerializer
+
+class CaseViewSet(viewsets.ModelViewSet):
+    """
+    API Endpoint that shows Cases that are created
+    """
+
+    queryset = Case.objects.all()
+    serializer_class = CaseSerializer
+    filterset_fields = ['id_reservation']
+
+class ProblemLineItemViewSet(viewsets.ModelViewSet):
+    """
+    API Endpoint for items associated with cases
+    """
+
+    queryset = ProblemLineItem.objects.all()
+    serializer_class = ProblemLineItemSerializer

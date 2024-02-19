@@ -207,39 +207,39 @@ class Reservation(models.Model):
         return {"message": "Reservation cancelled successfully."}
     
     #this is a very rough draft, since a lot of the funcitonality here is not yet set up.
-    def report_cards_lost(self, lost_inventory_ids):
-        borrowed_status = ReservationStatus.objects.get(name='Borrowed')
-        returned_status = ReservationStatus.objects.get(name='Returned')
-        lost_status = ReservationStatus.objects.get(name='Lost')
+    # def report_cards_lost(self, lost_inventory_ids):
+    #     borrowed_status = ReservationStatus.objects.get(name='Borrowed')
+    #     returned_status = ReservationStatus.objects.get(name='Returned')
+    #     lost_status = ReservationStatus.objects.get(name='Lost')
 
-        valid_statuses = [borrowed_status, returned_status]
+    #     valid_statuses = [borrowed_status, returned_status]
 
-        if self.status not in valid_statuses:
-            return {"message": "Cannot report cards lost. Invalid reservation status."}
+    #     if self.status not in valid_statuses:
+    #         return {"message": "Cannot report cards lost. Invalid reservation status."}
 
-        if self.status == lost_status:
-            return {"message": "Reservation is already in the 'Lost' stage."}
+    #     if self.status == lost_status:
+    #         return {"message": "Reservation is already in the 'Lost' stage."}
 
-        # Additional logic for reporting cards lost if needed...
+    #     # Additional logic for reporting cards lost if needed...
 
-        lost_lineitems = self.lineitem_set.filter(id_inventory__in=lost_inventory_ids, borrowed=True, hold=False)
-        total_lost_value = sum(lost_item.value for lost_item in lost_lineitems)
+    #     lost_lineitems = self.lineitem_set.filter(id_inventory__in=lost_inventory_ids, borrowed=True, hold=False)
+    #     total_lost_value = sum(lost_item.value for lost_item in lost_lineitems)
 
-        # Transition to "Lost" stage
-        self.status = lost_status
-        # Set last_updated to the current time
-        self.last_updated = timezone.now()
-        self.save()
+    #     # Transition to "Lost" stage
+    #     self.status = lost_status
+    #     # Set last_updated to the current time
+    #     self.last_updated = timezone.now()
+    #     self.save()
 
-        return {
-            "message": f"{lost_lineitems.count()} have been reported as lost. Please return all other items immediately. "
-                       f"Based on your reported losses, you have a liability of {total_lost_value}. "
-                       f"This liability may be greater if you have lost more than you claim to. "
-                       "The lender will need to approve you to borrow items again before you can start a new reservation.",
-            "status": self.status.name,
-            "lost_lineitems": [{"id_inventory": lost_item.id_inventory, "value": lost_item.value} for lost_item in lost_lineitems],
-            "total_lost_value": total_lost_value
-        }
+    #     return {
+    #         "message": f"{lost_lineitems.count()} have been reported as lost. Please return all other items immediately. "
+    #                    f"Based on your reported losses, you have a liability of {total_lost_value}. "
+    #                    f"This liability may be greater if you have lost more than you claim to. "
+    #                    "The lender will need to approve you to borrow items again before you can start a new reservation.",
+    #         "status": self.status.name,
+    #         "lost_lineitems": [{"id_inventory": lost_item.id_inventory, "value": lost_item.value} for lost_item in lost_lineitems],
+    #         "total_lost_value": total_lost_value
+    #     }
     
     def return_cards(self):
     # Check if the reservation is already in the "Returned" stage
@@ -330,6 +330,7 @@ class Reservation(models.Model):
 
         return {"message": "Cannot return to inventory. Invalid reservation status."}
 
+    # naming is rough here, since this is specifically for opening a case on delivery issues 
     def open_case(self, id_user, note, items):
         print('in the open case method')
         # Create a new instance of Case
@@ -365,6 +366,45 @@ class Reservation(models.Model):
         new_case.save()
 
         return {"message": f"Case # {new_case.id} has been opened.", "case_id": new_case.id, "lineitems": serialized_lineitems}
+
+    def report_cards_lost(self, id_user, note, items):
+            print('in the report cards lost method')
+            # Create a new instance of Case
+            new_case = Case.objects.create(id_user=id_user, id_reservation=self, note=note)
+
+            # Update the reservation stage to "disputed"
+            self.stage = ReservationStatus.objects.get(name='Lost')
+
+            # Update the action_required field to "none"
+            self.action_required = DecisionPoint.objects.get(title='none')
+            self.lost = True
+            self.complete = True
+            print(self)
+
+            # Save the changes to the reservation instance
+            self.save()
+            # Create ProblemLineItem instances for each item
+            serialized_lineitems = []
+
+            for key, item_info in items.items():
+                line_item = LineItem.objects.get(id=item_info["id"])
+                
+                # Assuming "selectedValue" property is part of item_info
+                problem_line_item = ProblemLineItem.objects.create(
+                    id_case=new_case,
+                    item=line_item,
+                    issue=item_info.get("selectedValue", "General Problem")
+                )
+
+                serialized_lineitems.append({
+                    "item_id": line_item.id,
+                    "issue": item_info.get("selectedValue", "General Problem") 
+                })
+
+            # Save the new_case instance
+            new_case.save()
+
+            return {"message": f"Case # {new_case.id} has been opened.", "case_id": new_case.id, "lineitems": serialized_lineitems}
 
     def __str__(self):
         return str(self.id)

@@ -270,6 +270,19 @@ class ReservationViewSet(viewsets.ModelViewSet):
         response = reservation.open_case(id_user=id_user, items=items, note=note)
 
         return Response(response)
+    
+    @action(detail=True, methods=['post'])
+    def report_lost(self, request, pk=None):
+        reservation = self.get_object()
+
+        # Assuming the request data contains 'id_user', 'note', and 'items'
+        id_user = request.data.get('id_user')
+        note = request.data.get('note')
+        items = request.data.get('line_item_problems', [])
+
+        response = reservation.report_cards_lost(id_user=id_user, items=items, note=note)
+
+        return Response(response)
         
 class DelinquencyViewSet(viewsets.ModelViewSet):
     """

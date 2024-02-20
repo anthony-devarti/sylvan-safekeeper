@@ -6,93 +6,96 @@ this is the backend for the project found here: https://github.com/anthony-devar
 ## Database Diagram
 ![sl diagram](https://github.com/anthony-devarti/sl-db/assets/98314025/9a8ecd24-c08b-454c-b49a-ee8d8799a65d)
 
-I'm goint to try to keep this diagram up to date.  
+I'm goint to try to keep this diagram up to date.  It has gotten significantly more detailed.
+This is the dbml in case you want to make changes.
 DBDiagram.io
-Table user {
-  id integer [primary key]
-}
-
-Table Reservation {
-  id integer [primary key]
-  id_user foreignkey
-  id_stage foreignkey
-  return_date datetime
-  date_created datetime
-  last_updated datetime
-  stage integer
-  complete bool
-  lost bool
-  default_state bool
-  action_required integer
-  pickup_date datetime
-  note varchar
-  pickup_method varchar
-}
-
-Table ReservationStatus{
-  id integer [primary key]
-  name varchar
-  description varchar
-  responsibility varchar
-}
-
-Table LineItem {
-  id integer [primary key]
-  id_reservation integer
-  card_name varchar
-  name integer
-  lent bool
-  hold bool
-  date_created datetime
-  last_updated datetime
-}
-
-Table Delinquencies {
-  id integer [primary key]
-  id_reservation integer
-  id_user integer
-}
-
-Table DecisionPoint {
-  id integer [primary key]
-  title varchar
-  description varchar
-  terminal bool
-  destination_on_decline integer
-  destination_on_success integer
-  accept_button varchar
-  decline_button varchar
-  responsibility varchar
-  header varchar
-  button_text varchar
-}
-
-Table Case {
-  id integer [primary key]
-  id_user integer
-  id_reservation integer
-  closed bool
-  note varchar
-  entire_reservation_issue bool
-}
-
-Table ProblemLineItem {
-  id integer [primary key]
-  id_case integer
-  item integer
-  issue varchar
-}
-
-Ref: LineItem.id > Reservation.id
-Ref: Reservation.id_stage > ReservationStatus.id
-Ref: Reservation.id_user > user.id
-Ref: Delinquencies.id_reservation < Reservation.id
-Ref: Delinquencies.id_user > user.id
-Ref: Reservation.action_required < DecisionPoint.id
-Ref: Case.id_user > user.id
-Ref:Case.id_reservation > Reservation.id
-Ref: ProblemLineItem.id_case > Case.id
-Ref: ProblemLineItem.item > LineItem.id
+```
+  Table user {
+    id integer [primary key]
+  }
+  
+  Table Reservation {
+    id integer [primary key]
+    id_user foreignkey
+    id_stage foreignkey
+    return_date datetime
+    date_created datetime
+    last_updated datetime
+    stage integer
+    complete bool
+    lost bool
+    default_state bool
+    action_required integer
+    pickup_date datetime
+    note varchar
+    pickup_method varchar
+  }
+  
+  Table ReservationStatus{
+    id integer [primary key]
+    name varchar
+    description varchar
+    responsibility varchar
+  }
+  
+  Table LineItem {
+    id integer [primary key]
+    id_reservation integer
+    card_name varchar
+    name integer
+    lent bool
+    hold bool
+    date_created datetime
+    last_updated datetime
+  }
+  
+  Table Delinquencies {
+    id integer [primary key]
+    id_reservation integer
+    id_user integer
+  }
+  
+  Table DecisionPoint {
+    id integer [primary key]
+    title varchar
+    description varchar
+    terminal bool
+    destination_on_decline integer
+    destination_on_success integer
+    accept_button varchar
+    decline_button varchar
+    responsibility varchar
+    header varchar
+    button_text varchar
+  }
+  
+  Table Case {
+    id integer [primary key]
+    id_user integer
+    id_reservation integer
+    closed bool
+    note varchar
+    entire_reservation_issue bool
+  }
+  
+  Table ProblemLineItem {
+    id integer [primary key]
+    id_case integer
+    item integer
+    issue varchar
+  }
+  
+  Ref: LineItem.id > Reservation.id
+  Ref: Reservation.id_stage > ReservationStatus.id
+  Ref: Reservation.id_user > user.id
+  Ref: Delinquencies.id_reservation < Reservation.id
+  Ref: Delinquencies.id_user > user.id
+  Ref: Reservation.action_required < DecisionPoint.id
+  Ref: Case.id_user > user.id
+  Ref:Case.id_reservation > Reservation.id
+  Ref: ProblemLineItem.id_case > Case.id
+  Ref: ProblemLineItem.item > LineItem.id
+```
 
 ## Notes on backend:
 <ul>We want cards to be reserved immediately when a user adds them to their basket

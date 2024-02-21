@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils import timezone
 from datetime import datetime
+from django.contrib.auth.models import User
 
 # Create your models here.
 
@@ -406,6 +407,75 @@ class Reservation(models.Model):
 
             return {"message": f"Case # {new_case.id} has been opened.", "case_id": new_case.id, "lineitems": serialized_lineitems}
 
+    @classmethod
+    def lender_get_active_reservations(cls):
+        active_reservations = cls.objects.filter(complete=False, lost=False)
+        print(active_reservations)
+
+        reservations_info_list = []
+        for reservation in active_reservations:
+            user_id = reservation.id_user
+            try:
+                user_instance = User.objects.get(id=user_id)
+            except User.DoesNotExist:
+                user_info = None  # Handle the case where the user does not exist
+            else:
+                user_info = {
+                    'id_user': user_instance.id,
+                    'username': user_instance.username,
+                    'email': user_instance.email,
+                    'name': user_instance.first_name + ' ' + user_instance.last_name
+                    # Include other user fields as needed
+                }
+
+            decision_point_info = {
+                'action_required': {
+                    'title': reservation.action_required.title,
+                    'description': reservation.action_required.description,
+                    'terminal': reservation.action_required.terminal,
+                    'destination_on_decline': reservation.action_required.destination_on_decline.id,
+                    'destination_on_success': reservation.action_required.destination_on_success.id,
+                    'responsibility': reservation.action_required.responsibility,
+                    'button_text': reservation.action_required.button_text
+                }
+            }
+
+            reservation_status_info = {
+                'stage': {
+                    'name': reservation.stage.name,
+                    'desc': reservation.stage.desc,
+                    'responsibility': reservation.stage.responsibility
+                }
+            }
+
+            reservation_info = {
+                'id': reservation.id,
+                'user_info': user_info,
+                'decision_point_info': decision_point_info,
+                'reservation_status_info': reservation_status_info,
+                'return_date': reservation.return_date,
+                'date_created': reservation.date_created,
+                'last_updated': reservation.last_updated,
+                'complete': reservation.complete,
+                'lost': reservation.lost,
+                'default_state': reservation.default_state,
+                'pickup_date': reservation.pickup_date,
+                'note': reservation.note,
+                'pickup_method': reservation.pickup_method,
+            }
+
+            reservations_info_list.append(reservation_info)
+
+            open_total = len(reservations_info_list)
+
+            response = {
+                'count': open_total,
+                'reservations': reservations_info_list,
+                'message' : f'There are {open_total} open reservations'
+            }
+
+        return response
+    
     def __str__(self):
         return str(self.id)
         

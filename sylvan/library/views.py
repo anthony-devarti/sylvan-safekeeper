@@ -283,7 +283,12 @@ class ReservationViewSet(viewsets.ModelViewSet):
         response = reservation.report_cards_lost(id_user=id_user, items=items, note=note)
 
         return Response(response)
-        
+
+    @action(detail=False, methods=['get'])
+    def lender_get_active_reservations(self, request):
+        reservations_info = Reservation.lender_get_active_reservations()
+        return Response(reservations_info)
+
 class DelinquencyViewSet(viewsets.ModelViewSet):
     """
     API Endpoint that allows delinquencies to be viewed or edited.
